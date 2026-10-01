@@ -77,10 +77,15 @@ export async function generateContent(formData: FormData) {
         }
       });
 
-      const view = new Uint8Array(await imageResult.bytes());
-      const buffer = Buffer.from(view);
-      
-      imageResultUrl = `data:image/jpeg;base64,${buffer.toString('base64')}`;
+      const imageResult = await hf.textToImage({
+  model: 'black-forest-labs/FLUX.1-schnell',
+  inputs: imagePrompt,
+  parameters: {
+    num_inference_steps: 4,
+  },
+});
+
+imageResultUrl = imageResult;
     }
 
     return { success: true, text: textResult, image: imageResultUrl };
