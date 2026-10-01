@@ -20,18 +20,18 @@ export async function generateContent(formData: FormData) {
   try {
     // 1. GERAÇÃO DE TEXTO (Apenas se o modo não for estritamente de imagem)
     if (mode !== 'image_only') {
-      const systemPrompt = `És um copywriter especialista em marketing digital e redes sociais. 
+      const systemPrompt = `Você é um copywriter especialista em marketing digital e redes sociais. 
       O teu objetivo é criar uma publicação perfeitamente adaptada para o ${platform}.
       
       Diretrizes obrigatórias de escrita:
       - Idioma: O texto DEVE ser escrito em ${language}.
       - Tom de voz e Estilo: Aplica uma abordagem ${style}. Adapta o vocabulário, o ritmo e o uso de emojis a este estilo específico.
-      - Formatação: Usa parágrafos curtos, quebras de linha para leitura escaneável e inclui 3 hashtags altamente relevantes no fim do post.
+      - Formatação: Usa parágrafos curtos, quebras de linha para leitura escaneável e inclui no mínimo 3 hashtags altamente relevantes no fim do post.
       
       ${mode === 'text_image' ? "No final do texto, adiciona EXATAMENTE a tag [PROMPT_IMAGEM]: seguida de um prompt em INGLÊS curto e puramente descritivo para gerar uma imagem que ilustre este post." : ""}`;
 
       const { text } = await generateText({
-        model: groq('llama-3.1-8b-instant'),
+        model: groq('openai/gpt-oss-20b'),
         system: systemPrompt,
         prompt: prompt,
       });
@@ -43,22 +43,22 @@ export async function generateContent(formData: FormData) {
     if (mode !== 'text_only') {
       let imagePrompt = '';
 
-      // CASO A: O modo é misto -> Extrai o prompt que o Llama já otimizou
+      // CASO A: O modo é misto -> Extrai o prompt que o Gpt já otimizou
       if (mode === 'text_image' && textResult.includes('[PROMPT_IMAGEM]:')) {
         const parts = textResult.split('[PROMPT_IMAGEM]:');
         textResult = parts[0].trim();
         imagePrompt = parts[1].trim();
       } 
-      // CASO B: O modo é "Apenas Imagem" -> Usamos o Llama em background para traduzir e expandir o prompt
+      // CASO B: O modo é "Apenas Imagem" -> Usamos o Gpt em background para traduzir e expandir o prompt
       else {
         console.log("A otimizar prompt de imagem em background...");
-        const enhancementPrompt = `És um engenheiro de prompts especialista para o gerador de imagens FLUX. 
-        Receberás uma ideia de imagem (pode estar em português) e deves transformá-la num prompt altamente descritivo, puramente em INGLÊS.
+        const enhancementPrompt = `Você é um engenheiro de prompts especialista para o gerador de imagens FLUX. 
+        Receberá uma ideia de imagem (pode estar em português) e deve transformá-la num prompt altamente descritivo, puramente em INGLÊS.
         Adiciona detalhes visuais como estilo (ex: cinematic, digital art, minimalist), iluminação (ex: soft studio lighting, neon glows) e composição.
         Responde APENAS com o prompt final em inglês, sem introduções, sem aspas e sem explicações.`;
 
         const { text } = await generateText({
-          model: groq('llama-3.1-8b-instant'),
+          model: groq('openai/gpt-oss-20b'),
           system: enhancementPrompt,
           prompt: prompt,
         });
